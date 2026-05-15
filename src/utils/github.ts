@@ -8,29 +8,52 @@ function getToken(): string {
   return (window as any).__GITHUB_TOKEN || GITHUB_TOKEN
 }
 
+function authHeaders(): Record<string, string> {
+  const token = getToken()
+  if (!token) return {}
+  return { Authorization: `token ${token}` }
+}
+
+function graphqlAuthHeaders(): Record<string, string> {
+  const token = getToken()
+  if (!token) return {}
+  return { Authorization: `Bearer ${token}` }
+}
+
 export async function fetchGithubUser(username: string) {
   const res = await fetch(`https://api.github.com/users/${username}`, {
-    headers: { Authorization: `token ${getToken()}` }
+    headers: { ...authHeaders() }
   })
-  if (!res.ok) throw new Error('User not found')
+  if (!res.ok) {
+    if (res.status === 404) throw new Error(`用户 ${username} 不存在`)
+    throw new Error(`GitHub API 错误 (${res.status})`)
+  }
   return res.json()
 }
 
 export async function fetchUserRepos(username: string) {
   const res = await fetch(`https://api.github.com/users/${username}/repos?sort=pushed&per_page=100`, {
-    headers: { Authorization: `token ${getToken()}` }
+    headers: { ...authHeaders() }
   })
+  if (!res.ok) return []
   return res.json()
 }
 
 export async function fetchUserEvents(username: string) {
   const res = await fetch(`https://api.github.com/users/${username}/events?per_page=100`, {
-    headers: { Authorization: `token ${getToken()}` }
+    headers: { ...authHeaders() }
   })
+  if (!res.ok) return []
   return res.json()
 }
 
 export async function fetchUserContributions(username: string, year: number) {
+  const token = getToken()
+  if (!token) {
+    // No token — return empty structure, heatmap will be empty
+    return { data: { user: { contributionsCollection: { totalCommitContributions: 0, contributionCalendar: { totalContributions: 0, weeks: [] }, commitContributionsByRepository: [] } } } }
+  }
+
   const query = `
     query($username: String!, $from: DateTime!, $to: DateTime!) {
       user(login: $username) {
@@ -65,7 +88,7 @@ export async function fetchUserContributions(username: string, year: number) {
   const res = await fetch('https://api.github.com/graphql', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${getToken()}`,
+      ...graphqlAuthHeaders(),
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
