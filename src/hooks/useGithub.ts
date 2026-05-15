@@ -60,6 +60,7 @@ export function useGithub() {
         user,
         stats,
         commits,
+        contributions,
         topRepos: nonForks,
         milestones: buildMilestones(user, stats, repos),
       })

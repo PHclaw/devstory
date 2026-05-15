@@ -70,6 +70,7 @@ export interface DevStory {
   user: GithubUser
   stats: YearStats
   commits: CommitStory[]
+  contributions: { date: string; contributionCount: number }[]
   topRepos: GithubRepo[]
   milestones: Milestone[]
 }

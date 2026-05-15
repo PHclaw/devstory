@@ -1,10 +1,28 @@
+import { useEffect, useState } from 'react'
 import Hero from './components/Hero'
 import StoryView from './components/StoryView'
+import LoadingSkeleton from './components/LoadingSkeleton'
 import { useGithub } from './hooks/useGithub'
 import { AlertCircle } from 'lucide-react'
 
 export default function App() {
   const { loading, error, story, loadStory } = useGithub()
+  const [autoLoaded, setAutoLoaded] = useState(false)
+
+  // Auto-load if ?user=xxx in URL
+  useEffect(() => {
+    if (autoLoaded) return
+    const params = new URLSearchParams(window.location.search)
+    const user = params.get('user')
+    if (user) {
+      setAutoLoaded(true)
+      loadStory(user)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (loading) {
+    return <LoadingSkeleton />
+  }
 
   if (error) {
     return (

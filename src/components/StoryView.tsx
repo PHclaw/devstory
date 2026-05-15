@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion'
 import type { DevStory } from '../types'
 import { LANGUAGE_COLORS } from '../utils/github'
+import ContributionHeatmap from './ContributionHeatmap'
+import ShareButton from './ShareButton'
 
 interface StatsCardProps {
   title: string
@@ -54,6 +56,7 @@ export default function StoryView({ story }: { story: DevStory }) {
               <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
                 {user.location && <span>📍 {user.location}</span>}
                 <a href={user.html_url} target="_blank" rel="noopener" className="text-neon-purple hover:underline">GitHub →</a>
+                <ShareButton username={user.login} />
               </div>
             </div>
           </motion.div>
@@ -76,6 +79,9 @@ export default function StoryView({ story }: { story: DevStory }) {
           <StatsCard title="粉丝" value={user.followers.toLocaleString()} subtitle="人" icon="👥" color="text-neon-pink" delay={0.4} />
           <StatsCard title="活跃月份" value={stats.mostActiveMonth || '—'} subtitle="最高产" icon="📅" color="text-neon-purple" delay={0.45} />
         </div>
+
+        {/* Contribution Heatmap */}
+        <ContributionHeatmap contributions={story.contributions.map(c => ({ date: c.date, count: c.contributionCount }))} year={stats.year} />
 
         {/* Language Bars */}
         {stats.topLanguages.length > 0 && (
